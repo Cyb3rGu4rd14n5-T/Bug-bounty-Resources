@@ -2,30 +2,24 @@
 
 # Recon
 
-This repository contains reconnaissance resources for bug bounty hunters and security researchers.
+This repository is an evolving Bug Bounty & Offensive Security Hub, designed to centralize the methodologies, checklists, and discovery patterns required to map and exploit modern attack surfaces.
 
-It is a growing collection of practical recon techniques, command patterns, and discovery methods used to identify attack surfaces in web applications and APIs.
+The purpose of this resource is to streamline the core pillars of security testing:
+Advanced Reconnaissance: Strategic methods for mapping digital footprints and identifying hidden infrastructure.
 
-The purpose of this repository is to support all types of reconnaissance activities needed during security testing, including but not limited to:
+Endpoint & Surface Discovery: Techniques for uncovering undocumented APIs, hidden directories, and obscure entry points.
 
-* Endpoint discovery
-* Surface mapping
-* Misconfiguration identification
-* Access control testing preparation
-* High-impact vulnerability hunting
+Vulnerability Identification: Practical checklists for hunting high-impact flaws like broken access control, server-side bypasses, and injection points.
 
-This is not limited to one tool or one technique.
-It is a continuously evolving recon reference that will expand over time as new methods and workflows are added.
+Misconfiguration Hunting: Patterns for detecting exposed cloud assets, insecure headers, and sensitive information leaks.
 
-The focus is on:
+Business Logic Analysis: Workflows for testing critical application flows, including authentication, payment systems, and user privileges.
 
-* Efficiency
-* Practical usage
-* Real-world applicability
-* Bug bounty and VAPT use cases
+Core Philosophy
+Efficiency First: Focused on high-speed discovery and reducing false positives.
 
-All content in this repository is intended for authorized security testing only.
+Real-World Impact: Built on proven techniques used in professional VAPT and top-tier bug bounty programs.
+Continuous Evolution: A living library that adapts as web technologies and security defenses shift.
 
-Always operate within program scope and with proper permission.
-
-
+Ethical Guidelines
+All content is strictly for authorized security testing. Researchers must maintain a "scope-first" mindset, ensuring every action aligns with the specific permissions and legal boundaries of the target program.
