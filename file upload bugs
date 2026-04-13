@@ -1,0 +1,51 @@
+To test for file upload vulnerabilities in a picture upload feature, you should focus on bypassing validation checks to achieve impacts ranging from Stored Cross-Site Scripting (XSS) to Remote Code Execution (RCE). [1, 2, 3, 4] 
+## 1. Step-by-Step Testing Guide (Manual Approach)
+Follow this systematic methodology to probe the upload endpoint: [5] 
+
+* Baseline Test: Upload a legitimate small .jpg file. Note the response: Where is it stored? Is the filename changed? Does it execute or just download?
+* Bypass Extension Filtering:
+* Alternative Extensions: If .php is blocked, try .php5, .phtml, .shtml, or .asa.
+   * Double Extensions: Rename your shell to image.png.php or image.php.png to see which part of the string the server validates.
+   * Case Variation: Try .PHp or .AsPx.
+* Manipulate Request Headers:
+* Content-Type Spoofing: Intercept the request with a tool like Burp Suite and change Content-Type: application/x-php to image/jpeg while keeping the .php extension.
+* Magic Byte Injection: Some servers check the file's header (Magic Bytes). Insert the hex signature of a GIF (GIF89a;) at the very beginning of your malicious script to fool the validator.
+* Path Traversal in Filename: Change the filename to ../../shell.php. If the server is misconfigured, it might save your file outside the restricted "images" directory into a directory where script execution is enabled.
+* SVG for XSS: If the site allows .svg (an XML-based image format), upload an SVG containing a JavaScript payload like <script>alert(1)</script>. [4, 5, 6, 7, 8, 9, 10, 11] 
+
+------------------------------
+## 2. Recommended Infosec Write-ups & Articles
+These articles provide detailed walkthroughs of scenarios exactly like yours:
+
+* [File Upload — Upload. Intercept. Exploit.](https://p4n7h3rx.medium.com/file-upload-upload-intercept-exploit-b5aa18cb8e9d): A Medium guide on intercepting and modifying requests for RCE.
+* [Ehxb | File Upload Vulnerabilities I](https://infosecwriteups.com/ehxb-file-upload-vulnerabilities-i-6ed033539682): A deep dive into three realistic scenarios: unrestricted upload, Content-Type bypass, and path traversal.
+* [File Upload Vulnerability Exploitation: From Image Upload to RCE](https://medium.com/@aboelazm834/file-upload-vulnerability-exploitation-from-image-upload-to-rce-e97623da127d): Explains the exact flow of turning a profile picture upload into a server takeover.
+* [5 Advanced Ways I Test for File Upload Vulnerabilities](https://medium.com/@red.whisperer/5-advanced-ways-i-test-for-file-upload-vulnerabilities-5b01358f87d1): Covers trickier techniques like ZIP slip and directory traversal via filenames. [4, 8, 10, 12, 13] 
+https://aardwolfsecurity.com/understanding-file-upload-vulnerabilities/
+------------------------------
+## 3. Notable HackerOne Reports (Exact Scenarios)
+Reviewing these real-world bug reports shows you what programs actually pay for:
+
+* [HackerOne Report #135072: RCE in profile picture upload](https://hackerone.com/reports/135072): Exploit using ImageMagick to get code execution via a picture.
+* [HackerOne Report #808287: Unrestricted file upload on contact images](https://hackerone.com/reports/808287): Nextcloud report where any file type was accepted in an image field.
+* [HackerOne Report #713: Upload profile photo from URL (SSRF)](https://hackerone.com/reports/713): Demonstrates how changing an upload type to a URL can lead to Server-Side Request Forgery.
+* [HackerOne Report #845832: SVG file upload leads to XML injection](https://hackerone.com/reports/845832): Shows how an SVG profile picture can be used for XXE attacks. [11, 14, 15, 16, 17] 
+
+[1] [https://medium.com](https://medium.com/@jokodfir/vulnerability-in-file-upload-e0339545bd9b)
+[2] [https://portswigger.net](https://portswigger.net/web-security/file-upload)
+[3] [https://medium.com](https://medium.com/@jokodfir/vulnerability-in-file-upload-e0339545bd9b)
+[4] [https://infosecwriteups.com](https://infosecwriteups.com/ehxb-file-upload-vulnerabilities-i-6ed033539682)
+[5] [https://medium.com](https://medium.com/@wnellygrace/how-to-test-for-file-upload-vulnerabilities-a-practical-guide-6b50e2629a5e)
+[6] [https://gupta-bless.medium.com](https://gupta-bless.medium.com/exploiting-unrestricted-file-upload-vulnerabilities-4831aa839b25)
+[7] [https://onsecurity.io](https://onsecurity.io/article/file-upload-checklist/)
+[8] [https://medium.com](https://medium.com/@aboelazm834/file-upload-vulnerability-exploitation-from-image-upload-to-rce-e97623da127d)
+[9] [https://infosecwriteups.com](https://infosecwriteups.com/2-file-upload-attacks-a-comprehensive-guide-3308cd48e815)
+[10] [https://medium.com](https://medium.com/@red.whisperer/5-advanced-ways-i-test-for-file-upload-vulnerabilities-5b01358f87d1)
+[11] [https://hackerone.com](https://hackerone.com/reports/845832)
+[12] [https://p4n7h3rx.medium.com](https://p4n7h3rx.medium.com/file-upload-upload-intercept-exploit-b5aa18cb8e9d)
+[13] [https://faun.pub](https://faun.pub/explaining-file-upload-vulnerabilities-34ca48b992c1)
+[14] [https://hackerone.com](https://hackerone.com/reports/808287)
+[15] [https://hackerone.com](https://hackerone.com/reports/135072#:~:text=Issue.%20The%20profile%20picture%20upload%20at%20/settings/profile/edit,MVG%20parsing%20which%20allows%20for%20command%20injection.)
+[16] [https://hackerone.com](https://hackerone.com/reports/713)
+[17] [https://hackerone.com](https://hackerone.com/reports/808287)
+[18] [https://hackerone.com](https://hackerone.com/reports/259913)
