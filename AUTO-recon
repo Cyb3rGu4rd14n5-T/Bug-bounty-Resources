@@ -1,0 +1,300 @@
+### 1. Passive Subdomain Sweep
+
+```
+subfinder -d $TARGET -silent | anew subdomains.txt
+```
+
+What it does: Collects subdomains from passive sources and appends only new entries.
+
+---
+
+### 2. CT Log Enumeration
+
+```
+curl -s "https://crt.sh/?q=%25.$TARGET&output=json" | jq -r '.[].name_value' | sed 's/\*\.//g' | sort -u | anew subdomains.txt
+```
+
+What it does: استخراج subdomains from SSL certificate transparency logs.
+
+---
+
+### 3. AssetFinder Collection
+
+```
+assetfinder --subs-only $TARGET | sort -u | anew subdomains.txt
+```
+
+What it does: Gathers subdomains from multiple public sources and deduplicates.
+
+---
+
+### 4. Juicy Subdomain Filter
+
+```
+cat subdomains.txt | grep -E 'api|dev|stg|test|admin|demo|stage|pre|vpn|internal|beta|uat|backup|old|legacy'
+```
+
+What it does: Filters high-value subdomains likely to contain vulnerabilities.
+
+---
+
+### 5. Live Host Detection
+
+```
+cat subdomains.txt | httpx -silent -o live_hosts.txt
+```
+
+What it does: Identifies which subdomains are alive.
+
+---
+
+### 6. Tech Fingerprinting
+
+```
+cat live_hosts.txt | httpx -silent -title -tech-detect -status-code -content-length
+```
+
+What it does: Detects technologies, status codes, and metadata of targets.
+
+---
+
+### 7. Subdomain Takeover Scan
+
+```
+subjack -w subdomains.txt -t 100 -timeout 30 -ssl -c ~/go/pkg/mod/github.com/haccer/subjack*/fingerprints.json -v
+```
+
+What it does: Detects subdomains vulnerable to takeover.
+
+---
+
+### 8. Common Port Scan
+
+```
+cat live_hosts.txt | naabu -p 80,443,8080,8443,3000,4000,5000,8000,8888,9000 -silent | anew open_ports.txt
+```
+
+What it does: Scans common web ports on live hosts.
+
+---
+
+### 9. Full Port Scan
+
+```
+cat subdomains.txt | naabu -p - -rate 1000 -silent -o all_ports.txt
+```
+
+What it does: Scans all ports for full service discovery.
+
+---
+
+### 10. HTTP Service Probe
+
+```
+cat all_ports.txt | httpx -silent -title -status-code -o web_services.txt
+```
+
+What it does: Identifies which open ports serve web applications.
+
+---
+
+### 11. Screenshot Recon
+
+```
+cat live_hosts.txt | aquatone -ports large -out screenshots/
+```
+
+What it does: Captures screenshots of all live web targets.
+
+---
+
+### 12. Wayback URL Extraction
+
+```
+echo $TARGET | waybackurls | sort -u | anew wayback_urls.txt
+```
+
+What it does: Retrieves historical URLs from Wayback Machine.
+
+---
+
+### 13. GAU URL Aggregation
+
+```
+gau $TARGET --threads 5 --subs | sort -u | anew all_urls.txt
+```
+
+What it does: Collects URLs from multiple archive sources.
+
+---
+
+### 14. Parameter Extraction
+
+```
+cat all_urls.txt | grep "?" | sort -u | uro | anew params.txt
+```
+
+What it does: Extracts URLs containing parameters.
+
+---
+
+### 15. GF Pattern Filtering
+
+```
+cat params.txt | gf xss | anew xss_params.txt
+cat params.txt | gf sqli | anew sqli_params.txt
+cat params.txt | gf ssrf | anew ssrf_params.txt
+cat params.txt | gf redirect | anew redirect_params.txt
+```
+
+What it does: Filters parameters based on vulnerability patterns.
+
+---
+
+### 16. JS File Discovery
+
+```
+cat live_hosts.txt | katana -js-crawl -d 3 -silent | grep "\.js$" | sort -u | anew js_files.txt
+```
+
+What it does: Crawls and extracts JavaScript file URLs.
+
+---
+
+### 17. Secret Detection in JS
+
+```
+cat js_files.txt | while read url; do curl -s "$url" | grep -E "(api_key|apikey|secret|token|password|auth|AWS|S3)"; done
+```
+
+What it does: Searches JavaScript files for exposed secrets.
+
+---
+
+### 18. DNS Resolution Mapping
+
+```
+cat subdomains.txt | dnsx -silent -a -resp | anew resolved_ips.txt
+```
+
+What it does: Resolves subdomains to IP addresses.
+
+---
+
+### 19. ASN Enumeration
+
+```
+whois -h whois.radb.net -i origin -T route $(whois -h whois.radb.net $(dig +short $TARGET | tail -1) | grep origin: | awk '{print $NF}' | head -1) | grep "route:" | awk '{print $NF}' | sort -u
+```
+
+What it does: Identifies IP ranges owned by the target.
+
+---
+
+### 20. Related Domain Discovery
+
+```
+curl -s "https://crt.sh/?q=$TARGET&output=json" | jq -r '.[].name_value' | grep -v "\*" | sort -u | grep -v "$TARGET"
+```
+
+What it does: Finds related domains sharing certificates.
+
+---
+
+### 21. Shodan Exposure Search
+
+```
+shodan search "ssl.cert.subject.cn:$TARGET" --fields ip_str,port,org,hostnames | head -50
+```
+
+What it does: Finds exposed internet-facing assets via Shodan.
+
+---
+
+### 22. Recon to Scan Pipeline
+
+```
+subfinder -d $TARGET -silent | httpx -silent | nuclei -t ~/nuclei-templates/ -severity critical,high -silent -o nuclei_results.txt
+```
+
+What it does: Automates recon and vulnerability scanning.
+
+---
+
+### 23. XSS Automation
+
+```
+cat xss_params.txt | dalfox pipe -o xss_found.txt
+```
+
+What it does: Tests parameters for XSS vulnerabilities.
+
+---
+
+### 24. Open Redirect Detection
+
+```
+cat redirect_params.txt | qsreplace "https://evil.com" | httpx -silent -location -mc 301,302 | grep "evil.com"
+```
+
+What it does: Detects open redirect vulnerabilities.
+
+---
+
+### 25. SSRF Probing
+
+```
+cat ssrf_params.txt | qsreplace "http://169.254.169.254/latest/meta-data/" | httpx -silent -mc 200 | grep "meta-data"
+```
+
+What it does: Tests for SSRF via AWS metadata endpoint.
+
+---
+
+### 26. LFI Scanner
+
+```
+cat params.txt | gf lfi | qsreplace "/etc/passwd" | httpx -silent -mc 200 | grep -v "Content-Length: 0"
+```
+
+What it does: Detects local file inclusion via file path injection.
+
+---
+
+### 27. .git Exposure Check
+
+```
+cat live_hosts.txt | httpx -path "/.git/config" -mc 200 -silent | anew git_exposed.txt
+```
+
+What it does: Finds exposed Git repositories.
+
+---
+
+### 28. Full Recon Pipeline
+
+```
+subfinder -d $TARGET -silent | httpx -silent -title -tech-detect -status-code | tee live_tech.txt | awk '{print $1}' | nuclei -t ~/nuclei-templates/ -severity critical,high,medium -silent -o vuln_report.txt
+```
+
+What it does: Runs full recon with fingerprinting and scanning.
+
+---
+
+### 29. Continuous Recon Cron
+
+```
+(crontab -l ; echo "0 6 * * * subfinder -d $TARGET -silent | anew ~/recon/$TARGET/subdomains.txt | notify -provider slack -id recon-alerts") | crontab -
+```
+
+What it does: Automates daily subdomain monitoring.
+
+---
+
+### 30. Scope Discovery Script
+
+```
+curl -sL https://github.com/arkadiyt/bounty-targets-data/raw/master/data/hackerone_data.json | jq -r '.[].targets.in_scope[] | [.asset_identifier, .asset_type] | @tsv' | grep "URL" | awk '{print $1}' | head -50
+```
+
+What it does: Fetches live in-scope targets from bug bounty programs.
